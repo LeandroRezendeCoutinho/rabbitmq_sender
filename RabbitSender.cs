@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using RabbitMQ.Client;
+using System.Text.Json;
 
 namespace rabbitmq_sender
 {
@@ -18,17 +19,31 @@ namespace rabbitmq_sender
                             autoDelete: false,
                             arguments: null);
 
-        string message = "Hello World!";
-        var body = Encoding.UTF8.GetBytes(message);
-        channel.BasicPublish(exchange: "",
-                          routingKey: "default",
-                          basicProperties: null,
-                          body: body);
-        Console.WriteLine(" [x] Sent {0}", message);
+        var request = new Request()
+        {
+          RequestId = new Guid(),
+          Header = new Header()
+          {
+            Accept = "application/json",
+            Method = "GET"
+          },
+          Body = "Messsage body"
+        };
+
+        for (int i = 0; i < 100_000; i++)
+        {
+          string message = "Hello World!" + i;
+          var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request));
+          channel.BasicPublish(exchange: "",
+                            routingKey: "default",
+                            basicProperties: null,
+                            body: body);
+          Console.WriteLine(" [x] Sent {0}", message);
+        }
       }
 
       Console.WriteLine(" Press [enter] to exit.");
-      Console.ReadLine();
+      // Console.ReadLine();
     }
   }
 }
